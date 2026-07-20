@@ -235,3 +235,4 @@ compile_commands.json
 # Generated DIC case outputs
 case/**/result/
 reference_code/
+.vscode/
