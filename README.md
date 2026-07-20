@@ -7,6 +7,9 @@ to Python through pybind11.
 This project is based on the algorithm flow of Ncorr and keeps the original
 Ncorr reference source under `reference_code/` for comparison.
 
+For the pure Python implementation, see
+[lbd-hfut/Subset-DIC](https://github.com/lbd-hfut/Subset-DIC).
+
 ## Features
 
 - Subset-based 2D DIC for grayscale image pairs.
