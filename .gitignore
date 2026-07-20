@@ -216,3 +216,22 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Native extension / CMake build artifacts
+_skbuild/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+*.cmake
+*.vcxproj
+*.vcxproj.filters
+*.sln
+*.pyd
+*.pdb
+*.ilk
+*.exp
+
+# Generated DIC case outputs
+case/**/result/
+reference_code/

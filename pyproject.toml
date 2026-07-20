@@ -1,0 +1,38 @@
+[build-system]
+requires = ["scikit-build-core>=0.9", "pybind11>=2.12"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "subsetdic"
+version = "0.1.0"
+description = "C++ implementation of Subset-DIC algorithms with Python bindings"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+dependencies = [
+    "numpy>=1.20",
+    "opencv-python>=4.5",
+    "opencv-contrib-python>=4.5",
+    "pyyaml>=6.0",
+]
+
+[tool.scikit-build]
+cmake.version = ">=3.21"
+wheel.packages = ["src/subsetdic"]
+
+[tool.cibuildwheel]
+build = "cp39-* cp310-* cp311-* cp312-*"
+skip = "pp* *-musllinux*"
+test-command = "python -c \"import subsetdic, subsetdic._core; print(subsetdic.__version__)\""
+test-requires = [
+    "numpy",
+    "opencv-python",
+    "opencv-contrib-python",
+    "pyyaml",
+]
+
+[tool.cibuildwheel.linux]
+archs = ["x86_64"]
+
+[tool.cibuildwheel.windows]
+archs = ["AMD64"]

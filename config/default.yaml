@@ -1,0 +1,26 @@
+dic:
+  radius: 20
+  spacing: 1
+  cutoff_diffnorm: 1.0e-6
+  cutoff_iteration: 50
+  subsettrunc: true
+  direct_seed_grid: false
+
+seeds:
+  method: sift
+  n_seeds: 1
+
+strain:
+  enabled: true
+  radius: 5
+
+postprocess:
+  enabled: true
+  max_iterations: 8
+  min_neighbors: 3
+  corrcoef_threshold: 2.0
+
+border:
+  bcoef: 20
+  interp: 20
+  extrap: 20
