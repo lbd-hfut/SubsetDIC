@@ -94,9 +94,10 @@ def precompute_qk_lut(bcoef: np.ndarray, QK: np.ndarray) -> np.ndarray:
 def extract_gradients_from_lut(lut: np.ndarray) -> tuple:
     """Extract gradient maps from QK_B_QKT LUT.
 
-    Gradient at pixel center (dx=0.5, dy=0.5) is:
-        df/dx = sum_{m,n} xv_dx[m] * entry[m,n] * xv[n]
-        df/dy = sum_{m,n} xv[m] * entry[m,n] * xv_dx[n]
+    Gradient at pixel center (dx=0.5, dy=0.5) is computed from the
+    interpolation convention y_powers @ entry @ x_powers:
+        df/dx = sum_{m,n} yv[m] * entry[m,n] * xv_dx[n]
+        df/dy = sum_{m,n} yv_dx[m] * entry[m,n] * xv[n]
     where:
         xv = [1, 0.5, 0.25, 0.125, 0.0625, 0.03125]
         xv_dx = [0, 1, 1, 0.75, 0.5, 0.3125]
@@ -112,10 +113,10 @@ def extract_gradients_from_lut(lut: np.ndarray) -> tuple:
 
     lut_6x6 = lut.reshape(lut.shape[0], lut.shape[1], 6, 6)
 
-    # grad_x[i,j] = xv_dx @ lut_6x6[i,j] @ xv
-    grad_x = np.einsum('m,ijmn,n->ij', xv_dx, lut_6x6, xv, optimize=True)
+    # grad_x[i,j] = xv @ lut_6x6[i,j] @ xv_dx
+    grad_x = np.einsum('m,ijmn,n->ij', xv, lut_6x6, xv_dx, optimize=True)
 
-    # grad_y[i,j] = xv @ lut_6x6[i,j] @ xv_dx
-    grad_y = np.einsum('m,ijmn,n->ij', xv, lut_6x6, xv_dx, optimize=True)
+    # grad_y[i,j] = xv_dx @ lut_6x6[i,j] @ xv
+    grad_y = np.einsum('m,ijmn,n->ij', xv_dx, lut_6x6, xv, optimize=True)
 
     return grad_x, grad_y

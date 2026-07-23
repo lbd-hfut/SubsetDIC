@@ -14,6 +14,8 @@ For the pure Python implementation, see
 
 - Subset-based 2D DIC for grayscale image pairs.
 - C++ core with Python API.
+- Quintic B-spline preprocessing for image interpolation and reference-image
+  gradients.
 - ROI-based region extraction.
 - SIFT or manual seed selection.
 - Region-growing DIC propagation.
@@ -133,6 +135,23 @@ Inputs:
   strain calculation is enabled.
 - `points_computed`: number of propagated valid points.
 - `regions`: ROI regions generated from the mask.
+
+## B-Spline Preprocessing
+
+SubsetDIC follows the Ncorr-style B-spline image preprocessing path. Before
+the C++ IC-GN solver starts, both reference and current images are converted to
+quintic B-spline coefficient images. These coefficient images are then packed
+into a `QK_B_QKT` lookup table.
+
+The current-image gray value interpolation in the C++ core is evaluated from
+that lookup table, not from bilinear interpolation on the raw image. The
+reference-image gradients used by IC-GN are extracted from the same lookup
+table convention, so interpolation and gradient calculation share the same
+B-spline basis.
+
+The pure Python version of this project is available at
+[lbd-hfut/Subset-DIC](https://github.com/lbd-hfut/Subset-DIC) and can be used
+as a reference for the B-spline preprocessing logic.
 
 ## Configuration
 

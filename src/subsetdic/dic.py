@@ -4,6 +4,8 @@ import numpy as np
 from typing import Optional, Union
 from .config import load_config
 from .sift_seeds import sift_seed_selection
+from .bcoef import compute_bspline_coefficients
+from .qk import generate_QK, precompute_qk_lut, extract_gradients_from_lut
 from . import _core
 
 try:
@@ -49,13 +51,20 @@ class SubsetDIC:
         cur_f = np.asfortranarray(cur)
         roi_f = np.asfortranarray(roi)
 
-        # Gradient: central diff on ref (Fortran)
-        gx = np.zeros_like(ref_f); gy = np.zeros_like(ref_f)
-        gx[1:-1, 1:-1] = (ref_f[1:-1, 2:] - ref_f[1:-1, :-2]) * 0.5
-        gy[1:-1, 1:-1] = (ref_f[2:, 1:-1] - ref_f[:-2, 1:-1]) * 0.5
+        # Quintic B-spline preprocessing.  The C++ core interpolates from the
+        # QK_B_QKT lookup table, and the reference gradients are extracted from
+        # the same representation so interpolation and IC-GN gradients are
+        # consistent.
+        qk = generate_QK()
+        ref_bcoef = compute_bspline_coefficients(ref_f, border=border)
+        cur_bcoef = compute_bspline_coefficients(cur_f, border=border)
+        ref_lut = precompute_qk_lut(ref_bcoef, qk)
+        cur_lut_arr = precompute_qk_lut(cur_bcoef, qk)
+        gx, gy = extract_gradients_from_lut(ref_lut)
 
-        # LUT = current image (for bilinear interpolation)
-        cur_lut = cur_f.ravel(order='F')
+        gx = np.asfortranarray(gx)
+        gy = np.asfortranarray(gy)
+        cur_lut = np.ascontiguousarray(cur_lut_arr).ravel(order="C")
 
         # Regions
         regions_raw, _ = _core.form_regions(roi_f, cutoff=20)
@@ -69,7 +78,7 @@ class SubsetDIC:
             r = DicResult(); r.success = False; return r
 
         # Refine
-        refined = _refine_seeds(ref_f, gx, gy, cur_lut, cur_f, regions, seeds, cfg)
+        refined = _refine_seeds(ref_f, gx, gy, cur_lut, cur_lut_arr.shape, cur_f, regions, seeds, cfg)
         if not refined:
             r = DicResult(); r.success = False; return r
 
@@ -83,8 +92,9 @@ class SubsetDIC:
         sy = np.array([s["y"] // step for s in refined], dtype=np.int32)
 
         rc = cfg["dic"]
-        rr = _core.rgdic(ref_f, gx, gy, 0,
-                          cur_lut, h, w,
+        rr = _core.rgdic(ref_f, gx, gy, border,
+                          cur_lut, cur_lut_arr.shape[0], cur_lut_arr.shape[1],
+                          cur_f,
                           regions, sp, sx, sy,
                           rc["radius"], step, rc["cutoff_diffnorm"],
                           rc["cutoff_iteration"], int(rc["subsettrunc"]),
@@ -234,14 +244,14 @@ def _postprocess_displacement(result, roi_grid, cfg):
     result.points_computed = int(result.valid.sum())
 
 
-def _refine_seeds(ref_f, gx, gy, cur_lut, cur_f, regions, seeds, cfg):
+def _refine_seeds(ref_f, gx, gy, cur_lut, cur_lut_shape, cur_f, regions, seeds, cfg):
     rc = cfg["dic"]
     radius = rc["radius"]
     h, w = ref_f.shape
     refined = []
     for s in seeds:
-        res = _core.calc_seed(ref_f, gx, gy, 0,
-                              cur_lut, h, w, cur_f,
+        res = _core.calc_seed(ref_f, gx, gy, cfg["border"]["bcoef"],
+                              cur_lut, cur_lut_shape[0], cur_lut_shape[1], cur_f,
                               regions, s["x"], s["y"],
                               radius, rc["cutoff_diffnorm"],
                               rc["cutoff_iteration"], int(rc["subsettrunc"]))

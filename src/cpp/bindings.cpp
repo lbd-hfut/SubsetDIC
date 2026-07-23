@@ -51,6 +51,7 @@ extern "C" {
         int grad_h, int grad_w,
         int border_bcoef,
         const double* cur_lut, int cur_lut_h, int cur_lut_w,
+        const double* cur_img, int cur_h, int cur_w,
         const Region* regions, int num_regions,
         const double* seed_params, const int* seed_xs, const int* seed_ys, int num_seeds,
         int radius, int space, double cutoff_diffnorm, int cutoff_iteration, int subsettrunc,
@@ -185,6 +186,7 @@ PYBIND11_MODULE(_core, m) {
                        int border_bcoef,
                        py::array_t<double> cur_lut,
                        int cur_lut_h, int cur_lut_w,
+                       py::array_t<double> cur_img,
                        py::list regions_list,
                        py::array_t<double> seed_params,
                        py::array_t<int32_t> seed_xs, py::array_t<int32_t> seed_ys,
@@ -196,6 +198,7 @@ PYBIND11_MODULE(_core, m) {
         auto gx_buf = ref_grad_x.request();
         auto gy_buf = ref_grad_y.request();
         auto cl_buf = cur_lut.request();
+        auto ci_buf = cur_img.request();
 
         auto regions = parse_regions(regions_list);
         int num_seeds = (int)seed_xs.request().size;
@@ -217,6 +220,7 @@ PYBIND11_MODULE(_core, m) {
             (int)gx_buf.shape[0], (int)gx_buf.shape[1],
             border_bcoef,
             (const double*)cl_buf.ptr, cur_lut_h, cur_lut_w,
+            (const double*)ci_buf.ptr, (int)ci_buf.shape[0], (int)ci_buf.shape[1],
             regions.data(), (int)regions.size(),
             (const double*)seed_params.request().ptr,
             (const int32_t*)seed_xs.request().ptr,

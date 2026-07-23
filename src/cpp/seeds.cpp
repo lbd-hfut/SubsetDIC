@@ -479,8 +479,9 @@ int calc_seed_point(
                     double y_tilda = (double)ck +
                                      defvec[1] + defvec[4] * ldx + defvec[5] * ldy;
 
-                    double bx_tilda = x_tilda + (double)border_bcoef;
-                    double by_tilda = y_tilda + (double)border_bcoef;
+                    double lut_offset = (border_bcoef > 0) ? (double)(border_bcoef - 2) : 0.0;
+                    double bx_tilda = x_tilda + lut_offset;
+                    double by_tilda = y_tilda + lut_offset;
 
                     int lidx = ((ck - cirroi.y) + cirroi.radius) + ci * nr_h;
 

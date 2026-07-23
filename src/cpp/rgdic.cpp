@@ -43,6 +43,7 @@ int rgdic_analysis(
     int grad_h, int grad_w,
     int border_bcoef,
     const double* cur_lut, int cur_lut_h, int cur_lut_w,
+    const double* cur_img, int cur_h, int cur_w,
     const Region* regions, int num_regions,
     const double* seed_params, const int* seed_xs, const int* seed_ys, int num_seeds,
     int radius, int spacing, double cutoff_diffnorm, int cutoff_iteration, int subsettrunc,
@@ -92,7 +93,7 @@ int rgdic_analysis(
                     ref_grad_x, ref_grad_y, grad_h, grad_w,
                     border_bcoef,
                     cur_lut, cur_lut_h, cur_lut_w,
-                    cur_lut, cur_lut_h, cur_lut_w,
+                    cur_img, cur_h, cur_w,
                     regions, num_regions,
                     x, y, radius, cutoff_diffnorm, cutoff_iteration, subsettrunc,
                     &su, &sv, &sdudx, &sdudy, &sdvdx, &sdvdy,
@@ -348,9 +349,10 @@ int rgdic_analysis(
                                 double ldx = (double)(ci - cirroi.radius);
                                 double ldy = (double)(ck - cirroi.y);
 
-                                double x_tilda_bcoef = (double)px + border_bcoef
+                                double lut_offset = (border_bcoef > 0) ? (double)(border_bcoef - 2) : 0.0;
+                                double x_tilda_bcoef = (double)px + lut_offset
                                     + defvec[0] + defvec[2] * ldx + defvec[3] * ldy;
-                                double y_tilda_bcoef = (double)py + border_bcoef
+                                double y_tilda_bcoef = (double)py + lut_offset
                                     + defvec[1] + defvec[4] * ldx + defvec[5] * ldy;
 
                                 int lind_g = (ck - cirroi.y + cirroi.radius) + ci * nr_h;
@@ -492,7 +494,7 @@ int rgdic_analysis(
                         ref_grad_x, ref_grad_y, grad_h, grad_w,
                         border_bcoef,
                         cur_lut, cur_lut_h, cur_lut_w,
-                        cur_lut, cur_lut_h, cur_lut_w,
+                        cur_img, cur_h, cur_w,
                         regions, num_regions,
                         nx, ny, radius, cutoff_diffnorm, cutoff_iteration, subsettrunc,
                         &su, &sv, &sdudx, &sdudy, &sdvdx, &sdvdy,
